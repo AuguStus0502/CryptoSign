@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Encrypt / Decrypt{% endblock %}
+
+{% block content %}
+<div class="page-wrap-md">
+
+  <div class="page-header fade-up">
+    <div>
+      <div class="page-title">Encrypt &amp; Decrypt</div>
+      <div class="page-subtitle">Hybrid RSA-OAEP + AES-256-GCM encryption. Encrypt to any public key; decrypt with your private key.</div>
+    </div>
+  </div>
+
+  {% if result %}
+  <!-- Result panel -->
+  <div class="card fade-up" style="margin-bottom:20px;border-color:rgba(var(--{% if result.mode == 'decrypted' %}success{% else %}accent{% endif %}-rgb),.3)">
+    <div class="card-header">
+      <div class="card-title">
+        {% if result.mode == 'encrypted' %}
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Encrypted Output
+        {% else %}
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/><polyline points="9 14 11 16 15 12"/></svg>
+        Decrypted Message
+        {% endif %}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge {% if result.mode == 'encrypted' %}badge-blue{% else %}badge-blue" style="background:rgba(var(--success-rgb),.12);color:var(--success){% endif %}">{{ result.key_name }}</span>
+        <button class="copy-btn" data-copy="#result-data">Copy</button>
+      </div>
+    </div>
+    <div class="card-body-tight">
+      <div class="code-block" id="result-data" style="max-height:260px;overflow-y:auto;white-space:pre-wrap">{{ result.data }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:16px" class="fade-up fade-up-1">
+    <button class="btn btn-primary" id="tab-enc-btn" onclick="showTab('enc')" style="flex:1">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Encrypt
+    </button>
+    <button class="btn btn-outline" id="tab-dec-btn" onclick="showTab('dec')" style="flex:1">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+      Decrypt
+    </button>
+  </div>
+
+  <!-- Encrypt panel -->
+  <div id="tab-enc" class="fade-up fade-up-1">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Encrypt a Message
+        </div>
+      </div>
+      <div class="card-body">
+        {% if not all_keys %}
+        <div class="alert alert-warning">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>No active key pairs exist yet. <a href="{{ url_for('manage_keys') }}">Generate a key pair</a> first.</span>
+        </div>
+        {% else %}
+        <form method="POST" action="{{ url_for('encrypt_msg') }}">
+          <input type="hidden" name="action" value="encrypt">
+
+          <div class="form-group">
+            <label class="form-label">Recipient's Public Key</label>
+            <select class="form-control" name="enc_key_id" required>
+              <optgroup label="Your Keys">
+                {% for kp in my_keys %}
+                <option value="{{ kp.id }}">{{ kp.key_name }} (you) — RSA-{{ kp.key_size }}</option>
+                {% endfor %}
+              </optgroup>
+              {% set other_keys = all_keys | rejectattr('owner.id', 'equalto', current_user.id) | list %}
+              {% if other_keys %}
+              <optgroup label="Other Users">
+                {% for kp in other_keys %}
+                <option value="{{ kp.id }}">{{ kp.key_name }} ({{ kp.owner.username }}) — RSA-{{ kp.key_size }}</option>
+                {% endfor %}
+              </optgroup>
+              {% endif %}
+            </select>
+            <div class="form-hint">The recipient must have the corresponding private key to decrypt.</div>
+          </div>
+
+          <div class="form-group mb-0">
+            <label class="form-label">Message to Encrypt</label>
+            <textarea class="form-control" name="message" rows="5"
+                      placeholder="Enter the plaintext message you want to encrypt…" required
+                      style="resize:vertical"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg btn-full" style="margin-top:18px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Encrypt Message
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Decrypt panel -->
+  <div id="tab-dec" style="display:none" class="fade-up fade-up-1">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+          Decrypt a Message
+        </div>
+      </div>
+      <div class="card-body">
+        {% if not my_keys %}
+        <div class="alert alert-warning">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>You have no active key pairs. <a href="{{ url_for('manage_keys') }}">Generate one</a> to decrypt messages.</span>
+        </div>
+        {% else %}
+        <form method="POST" action="{{ url_for('encrypt_msg') }}">
+          <input type="hidden" name="action" value="decrypt">
+
+          <div class="grid-2" style="margin-bottom:0">
+            <div class="form-group">
+              <label class="form-label">Your Private Key</label>
+              <select class="form-control" name="dec_key_id" required>
+                {% for kp in my_keys %}
+                <option value="{{ kp.id }}">{{ kp.key_name }} — RSA-{{ kp.key_size }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Key Password</label>
+              <input class="form-control" type="password" name="key_password"
+                     placeholder="Password to unlock your private key" required>
+            </div>
+          </div>
+
+          <div class="form-group mb-0">
+            <label class="form-label">Encrypted JSON</label>
+            <textarea class="form-control" name="enc_json" rows="7"
+                      placeholder='Paste the encrypted JSON here, e.g. {"encrypted_key":"…","nonce":"…","ciphertext":"…"}'
+                      required style="resize:vertical;font-family:var(--mono);font-size:12px"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg btn-full" style="margin-top:18px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+            Decrypt Message
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="card fade-up fade-up-2" style="margin-top:20px">
+    <div class="card-header">
+      <div class="card-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        How Hybrid Encryption Works
+      </div>
+    </div>
+    <div class="card-body">
+      <ol style="padding-left:18px;font-size:13.5px;color:var(--text2);line-height:2.1">
+        <li>A random <strong>AES-256 session key</strong> is generated for this message only.</li>
+        <li>Your message is encrypted with <strong>AES-256-GCM</strong> (authenticated encryption).</li>
+        <li>The session key is encrypted with the recipient's <strong>RSA public key</strong> using OAEP padding.</li>
+        <li>The output JSON contains <code class="mono" style="font-size:12px;background:var(--bg2);padding:1px 5px;border-radius:4px">encrypted_key</code>, <code class="mono" style="font-size:12px;background:var(--bg2);padding:1px 5px;border-radius:4px">nonce</code>, and <code class="mono" style="font-size:12px;background:var(--bg2);padding:1px 5px;border-radius:4px">ciphertext</code>.</li>
+        <li>Only the holder of the matching <strong>private key</strong> can decrypt the session key and read the message.</li>
+      </ol>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showTab(tab) {
+  const encPanel = document.getElementById('tab-enc');
+  const decPanel = document.getElementById('tab-dec');
+  const encBtn   = document.getElementById('tab-enc-btn');
+  const decBtn   = document.getElementById('tab-dec-btn');
+  if (tab === 'enc') {
+    encPanel.style.display = '';
+    decPanel.style.display = 'none';
+    encBtn.className = 'btn btn-primary';
+    decBtn.className = 'btn btn-outline';
+  } else {
+    encPanel.style.display = 'none';
+    decPanel.style.display = '';
+    encBtn.className = 'btn btn-outline';
+    decBtn.className = 'btn btn-primary';
+  }
+}
+// If result came from decrypt action, auto-show decrypt tab
+{% if result and result.mode == 'decrypted' %}showTab('dec');{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Audit Logs{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+  <div class="page-header fade-up">
+    <div>
+      <h1 class="page-title">Audit Logs</h1>
+      <p class="page-subtitle">Complete record of all system events</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="badge badge-cyan">Page {{ logs.page }} of {{ logs.pages }}</span>
+      <span class="badge badge-gray">{{ logs.total }} events</span>
+    </div>
+  </div>
+
+  <div class="card fade-up fade-up-1">
+    <div class="table-wrap" style="border:none;border-radius:0">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Event Type</th>
+            <th>User</th>
+            <th>Details</th>
+            <th>IP Address</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs.items %}
+          <tr>
+            <td style="color:var(--text3);font-size:12px;font-family:var(--mono)">{{ log.id }}</td>
+            <td>
+              {% set a = log.action.lower() %}
+              {% if 'login' in a and 'fail' not in a %}
+                <span class="log-action log-login">{{ log.action }}</span>
+              {% elif 'admin' in a or 'create' in a or 'role' in a %}
+                <span class="log-action log-admin">{{ log.action }}</span>
+              {% elif 'delete' in a or 'fail' in a or 'block' in a %}
+                <span class="log-action log-danger">{{ log.action }}</span>
+              {% else %}
+                <span class="log-action log-default">{{ log.action }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <span style="font-weight:600;color:var(--text)">{{ log.username or '—' }}</span>
+            </td>
+            <td style="color:var(--text3);font-size:13px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+              {{ log.details or '—' }}
+            </td>
+            <td>
+              <span class="mono text-sm" style="color:var(--text3)">{{ log.ip_address or '—' }}</span>
+            </td>
+            <td style="white-space:nowrap;font-size:12.5px;color:var(--text3)">
+              <div>{{ log.timestamp.strftime('%d %b %Y') }}</div>
+              <div style="font-family:var(--mono);font-size:11px">{{ log.timestamp.strftime('%H:%M:%S') }}</div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <span class="empty-state-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </span>
+                <p class="empty-state-text">No logs yet</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if logs.pages > 1 %}
+  <nav class="pagination fade-up fade-up-2">
+    {% if logs.has_prev %}
+    <div class="page-item">
+      <a href="?page={{ logs.prev_num }}" class="page-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </a>
+    </div>
+    {% endif %}
+
+    {% for p in logs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+      {% if p %}
+        <div class="page-item {% if p == logs.page %}active{% endif %}">
+          <a href="?page={{ p }}" class="page-link">{{ p }}</a>
+        </div>
+      {% else %}
+        <div class="page-item disabled">
+          <span class="page-link" style="font-size:16px;line-height:1">…</span>
+        </div>
+      {% endif %}
+    {% endfor %}
+
+    {% if logs.has_next %}
+    <div class="page-item">
+      <a href="?page={{ logs.next_num }}" class="page-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+    </div>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+</div>
+{% endblock %}

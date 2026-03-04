@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }}{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 60px)">
+  <div style="text-align:center;padding:40px 20px">
+    <div style="font-family:var(--display);font-size:5rem;font-weight:800;color:var(--border2);letter-spacing:-.05em;line-height:1">{{ code }}</div>
+    <div style="font-family:var(--display);font-size:1.4rem;font-weight:700;color:var(--text);margin-top:8px;margin-bottom:8px">{{ message }}</div>
+    <div style="font-size:14px;color:var(--text3);margin-bottom:28px">
+      {% if code == 403 %}You don't have permission to view this page.
+      {% elif code == 404 %}The page you're looking for doesn't exist.
+      {% else %}Something went wrong on our end.{% endif %}
+    </div>
+    <a href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('login') }}" class="btn btn-primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Go Home
+    </a>
+  </div>
+</div>
+{% endblock %}

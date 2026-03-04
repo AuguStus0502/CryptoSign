@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Sign File{% endblock %}
+
+{% block content %}
+<div class="page-wrap-md">
+
+  <div class="page-header fade-up">
+    <div>
+      <div class="page-title">Sign a File</div>
+      <div class="page-subtitle">Upload any file and sign it with your private key using RSA-PSS + SHA-256.</div>
+    </div>
+  </div>
+
+  {% if not sig_info %}
+  <!-- Sign form -->
+  <div class="card fade-up fade-up-1">
+    <div class="card-body">
+      {% if not keys %}
+      <div class="alert alert-warning">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>You don't have any active key pairs. <a href="{{ url_for('manage_keys') }}">Generate a key pair</a> first.</span>
+      </div>
+      {% else %}
+      <form method="POST" action="{{ url_for('sign_file') }}" enctype="multipart/form-data" id="sign-form">
+
+        <div class="form-group">
+          <label class="form-label">Select Key Pair</label>
+          <select class="form-control" name="key_id" required>
+            {% for kp in keys %}
+            <option value="{{ kp.id }}">{{ kp.key_name }} — RSA-{{ kp.key_size }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Key Password</label>
+          <input class="form-control" type="password" name="key_password"
+                 placeholder="Password to unlock your private key" required>
+          <div class="form-hint">Your private key is encrypted — enter the password used when you created it.</div>
+        </div>
+
+        <div class="form-group mb-0">
+          <label class="form-label">File to Sign</label>
+          <div class="drop-zone" id="file-drop">
+            <input type="file" name="file" id="file-input" required>
+            <span class="drop-zone-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
+            <div class="drop-zone-text">Drop file here or click to browse</div>
+            <div class="drop-zone-hint">Any file type · Max 16 MB</div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-full" id="sign-btn" style="margin-top:20px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Sign File
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="card fade-up fade-up-2" style="margin-top:20px">
+    <div class="card-header">
+      <div class="card-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> How Signing Works</div>
+    </div>
+    <div class="card-body">
+      <ol style="padding-left:18px;font-size:13.5px;color:var(--text2);line-height:2">
+        <li>Your file is hashed with <strong>SHA-256</strong> to produce a unique fingerprint.</li>
+        <li>The hash is signed with your <strong>RSA private key</strong> using the PSS padding scheme.</li>
+        <li>A <code class="mono" style="font-size:12px;background:var(--bg2);padding:1px 5px;border-radius:4px">.sig.json</code> file is generated containing the signature and your public key.</li>
+        <li>Anyone with the original file + <code class="mono" style="font-size:12px;background:var(--bg2);padding:1px 5px;border-radius:4px">.sig.json</code> can verify authenticity.</li>
+      </ol>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- Success result -->
+  <div class="card fade-up">
+    <div class="card-body" style="text-align:center;padding:36px 28px">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(var(--success-rgb),.15);display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+      <div style="font-family:var(--display);font-size:1.4rem;font-weight:800;color:var(--accent2);margin-bottom:6px">File Signed Successfully</div>
+      <div style="font-size:13.5px;color:var(--text3)">Download the signature file and share it alongside your original file.</div>
+    </div>
+  </div>
+
+  <!-- Sig details -->
+  <div class="card fade-up fade-up-1" style="margin-top:16px">
+    <div class="card-header">
+      <div class="card-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Signature Details</div>
+    </div>
+    <div class="card-body">
+      <dl class="sig-grid">
+        <dt>File</dt>      <dd>{{ sig_info.filename }}</dd>
+        <dt>Signed By</dt> <dd>{{ sig_info.signed_by }}</dd>
+        <dt>Key</dt>       <dd>{{ sig_info.key_name }}</dd>
+        <dt>Algorithm</dt> <dd>RSA-PSS + SHA-256</dd>
+        <dt>Signed At</dt> <dd>{{ sig_info.signed_at }}</dd>
+        <dt>SHA-256</dt>
+        <dd>
+          <span class="fingerprint" id="file-hash">{{ sig_info.sha256 }}</span>
+          <button class="copy-btn" data-copy="#file-hash" style="margin-left:8px">Copy</button>
+        </dd>
+        <dt>Key Fingerprint</dt>
+        <dd>
+          <span class="fingerprint" id="key-fp">{{ sig_info.fingerprint }}</span>
+          <button class="copy-btn" data-copy="#key-fp" style="margin-left:8px">Copy</button>
+        </dd>
+      </dl>
+    </div>
+  </div>
+
+  <!-- Sig JSON -->
+  <div class="card fade-up fade-up-2" style="margin-top:16px">
+    <div class="card-header">
+      <div class="card-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Signature JSON</div>
+      <button class="copy-btn" data-copy="#sig-json">Copy JSON</button>
+    </div>
+    <div class="card-body-tight">
+      <div class="code-block" id="sig-json" style="max-height:200px;overflow-y:auto">{{ sig_json }}</div>
+    </div>
+  </div>
+
+  <div class="flex gap-2 fade-up fade-up-3" style="margin-top:16px">
+    <a href="{{ url_for('download_sig', sig_id=sig_info.sig_id) }}"
+       class="btn btn-primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download .sig.json
+    </a>
+    <a href="{{ url_for('sign_file') }}" class="btn btn-outline">Sign Another File</a>
+    <a href="{{ url_for('verify_sig') }}" class="btn btn-outline">Verify a Signature</a>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+const signForm = document.getElementById('sign-form');
+if (signForm) {
+  signForm.addEventListener('submit', function() {
+    const btn = document.getElementById('sign-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Signing…';
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}Manage Keys{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+  <div class="page-header fade-up">
+    <div>
+      <div class="page-title">Key Management</div>
+      <div class="page-subtitle">Generate, inspect, and revoke your RSA key pairs.</div>
+    </div>
+  </div>
+
+  <!-- Generate form -->
+  <div class="card fade-up fade-up-1" style="margin-bottom:28px">
+    <div class="card-header">
+      <div class="card-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Generate New Key Pair
+      </div>
+    </div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('manage_keys') }}" id="keygen-form">
+        <div class="grid-3">
+          <div class="form-group mb-0">
+            <label class="form-label" for="key_name">Key Name</label>
+            <input class="form-control" type="text" id="key_name" name="key_name"
+                   placeholder="e.g. release-signing-2025" required>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="key_size">Key Size</label>
+            <select class="form-control" id="key_size" name="key_size">
+              <option value="2048">RSA-2048 (Recommended)</option>
+              <option value="3072">RSA-3072</option>
+              <option value="4096">RSA-4096 (Most Secure)</option>
+            </select>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label" for="key_password">Keystore Password</label>
+            <input class="form-control" type="password" id="key_password" name="key_password"
+                   placeholder="Encrypts your private key" required>
+          </div>
+        </div>
+        <div style="margin-top:18px">
+          <button type="submit" class="btn btn-primary" id="keygen-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+            Generate Key Pair
+          </button>
+          <span class="form-hint" style="display:inline;margin-left:12px">RSA key generation may take a few seconds.</span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Key list -->
+  <div class="section-label fade-up fade-up-2">Your Keys ({{ keypairs|length }})</div>
+
+  {% if keypairs %}
+    {% for kp in keypairs %}
+    <div class="key-card fade-up" style="animation-delay:{{ loop.index0 * 0.06 }}s {% if kp.is_revoked %}; opacity:.6{% endif %}">
+      <div class="key-card-header">
+        <div>
+          <div class="key-name">
+            {{ kp.key_name }}
+            {% if kp.is_revoked %}
+              <span class="badge badge-red" style="margin-left:8px;font-size:10px">REVOKED</span>
+            {% else %}
+              <span class="badge badge-blue" style="margin-left:8px;font-size:10px">ACTIVE</span>
+            {% endif %}
+          </div>
+          <div class="key-meta">
+            <span class="key-meta-item">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              RSA-{{ kp.key_size }}
+            </span>
+            <span class="key-meta-item">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Created {{ kp.created_at.strftime('%d %b %Y') }}
+            </span>
+            {% if kp.is_revoked and kp.revoked_at %}
+            <span class="key-meta-item" style="color:var(--danger)">
+              Revoked {{ kp.revoked_at.strftime('%d %b %Y') }}
+            </span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="flex gap-2">
+          {% if kp.certificate_pem %}
+          <a href="{{ url_for('download_certificate', key_id=kp.id) }}" class="btn btn-outline btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Certificate
+          </a>
+          {% endif %}
+          <a href="{{ url_for('download_public_key', key_id=kp.id) }}" class="btn btn-outline btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Public Key
+          </a>
+          {% if not kp.is_revoked %}
+          <button class="btn btn-outline btn-sm" onclick="openExportModal({{ kp.id }}, '{{ kp.key_name }}')"
+                  style="color:var(--warning);border-color:var(--warning)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Export Private
+          </button>
+          <form method="POST" action="{{ url_for('revoke_key', key_id=kp.id) }}" style="display:inline">
+            <button type="submit" class="btn btn-outline btn-sm"
+                    data-confirm="Revoke '{{ kp.key_name }}'? This cannot be undone."
+                    style="color:var(--danger);border-color:var(--danger)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              Revoke
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Fingerprint -->
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="section-label" style="margin-bottom:0;white-space:nowrap">Fingerprint</span>
+        <div style="flex:1;overflow:hidden">
+          <span class="fingerprint" id="fp-{{ kp.id }}">{{ kp.fingerprint }}</span>
+        </div>
+        <button class="copy-btn" data-copy="#fp-{{ kp.id }}">Copy</button>
+      </div>
+
+      <!-- Public key -->
+      <details style="margin-top:14px">
+        <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--text3);user-select:none">
+          Show Public Key PEM
+        </summary>
+        <div style="margin-top:10px;position:relative">
+          <div class="code-block" id="pub-{{ kp.id }}" style="max-height:160px;overflow-y:auto">{{ kp.public_key_pem }}</div>
+          <button class="copy-btn" data-copy="#pub-{{ kp.id }}" style="position:absolute;top:8px;right:8px">Copy</button>
+        </div>
+      </details>
+
+      {% if kp.certificate_pem %}
+      <details style="margin-top:10px">
+        <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--text3);user-select:none">
+          Show X.509 Certificate PEM
+        </summary>
+        <div style="margin-top:10px;position:relative">
+          <div class="code-block" id="cert-{{ kp.id }}" style="max-height:160px;overflow-y:auto">{{ kp.certificate_pem }}</div>
+          <button class="copy-btn" data-copy="#cert-{{ kp.id }}" style="position:absolute;top:8px;right:8px">Copy</button>
+        </div>
+      </details>
+      {% endif %}
+    </div>
+    {% endfor %}
+
+  {% else %}
+  <div class="card">
+    <div class="empty-state">
+      <span class="empty-state-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg></span>
+      <div class="empty-state-text">No keys yet. Generate your first key pair above.</div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+document.getElementById('keygen-form').addEventListener('submit', function() {
+  const btn = document.getElementById('keygen-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Generating…';
+});
+</script>
+
+<!-- Private key export modal -->
+<div id="export-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.55);align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;width:100%;max-width:400px;margin:20px">
+    <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:6px">Export Encrypted Private Key</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:20px">
+      Enter your key password to confirm and download the encrypted <code style="font-family:var(--mono);font-size:11px;background:var(--bg);padding:1px 5px;border-radius:4px">.pem</code> file.
+      The private key remains encrypted with your password.
+    </div>
+    <div class="alert alert-warning" style="margin-bottom:16px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span style="font-size:12px">Keep your private key secure. Never share it.</span>
+    </div>
+    <form method="POST" id="export-form" action="">
+      <div class="form-group">
+        <label class="form-label">Key: <span id="export-key-name" style="color:var(--accent2)"></span></label>
+        <input class="form-control" type="password" name="key_password"
+               placeholder="Key password" required autofocus>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button type="submit" class="btn btn-primary" style="flex:1">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </button>
+        <button type="button" class="btn btn-outline" onclick="closeExportModal()" style="flex:1">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openExportModal(keyId, keyName) {
+  document.getElementById('export-key-name').textContent = keyName;
+  document.getElementById('export-form').action = '/keys/' + keyId + '/download-private';
+  const modal = document.getElementById('export-modal');
+  modal.style.display = 'flex';
+  modal.querySelector('input[type="password"]').value = '';
+  setTimeout(() => modal.querySelector('input[type="password"]').focus(), 50);
+}
+function closeExportModal() {
+  document.getElementById('export-modal').style.display = 'none';
+}
+document.getElementById('export-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeExportModal();
+});
+</script>
+{% endblock %}

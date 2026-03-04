@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Verify Signature{% endblock %}
+
+{% block content %}
+<div class="page-wrap-md">
+
+  <div class="page-header fade-up">
+    <div>
+      <div class="page-title">Verify Signature</div>
+      <div class="page-subtitle">Upload a file and its signature to verify authenticity and integrity.</div>
+    </div>
+  </div>
+
+  {% if verified is defined %}
+  <!-- Result -->
+  <div class="verify-result {{ 'valid' if verified else 'invalid' }} fade-up" style="margin-bottom:20px">
+    <span class="verify-icon" style="display:flex;justify-content:center;margin-bottom:12px">
+      {% if verified %}
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(var(--success-rgb),.15);display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+      {% else %}
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(var(--danger-rgb),.12);display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+      {% endif %}
+    </span>
+    <div class="verify-label">{{ 'Signature Valid' if verified else 'Signature Invalid' }}</div>
+    <div style="font-size:13.5px;color:var(--text3);margin-top:6px">
+      {% if verified %}
+        This file is authentic and has not been modified since signing.
+      {% else %}
+        The signature does not match — this file may have been tampered with.
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Details -->
+  {% if sig_info %}
+  <div class="card fade-up fade-up-1" style="margin-bottom:16px">
+    <div class="card-header">
+      <div class="card-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Verification Details</div>
+    </div>
+    <div class="card-body">
+      <dl class="sig-grid">
+        <dt>File Verified</dt>  <dd>{{ filename }}</dd>
+        {% if sig_info.signed_by %}
+        <dt>Signed By</dt>      <dd>{{ sig_info.signed_by }}</dd>
+        {% endif %}
+        {% if sig_info.key_name %}
+        <dt>Key Name</dt>       <dd>{{ sig_info.key_name }}</dd>
+        {% endif %}
+        {% if sig_info.signed_at %}
+        <dt>Signed At</dt>      <dd>{{ sig_info.signed_at }}</dd>
+        {% endif %}
+        <dt>SHA-256 (actual)</dt>
+        <dd>
+          <span class="fingerprint">{{ actual_hash }}</span>
+          {% if hash_match %}
+            <span class="badge badge-blue" style="margin-left:6px">Match</span>
+          {% else %}
+            <span class="badge badge-red" style="margin-left:6px">Mismatch</span>
+          {% endif %}
+        </dd>
+        {% if sig_info.fingerprint %}
+        <dt>Key Fingerprint</dt>
+        <dd><span class="fingerprint">{{ sig_info.fingerprint }}</span></dd>
+        {% endif %}
+      </dl>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="flex gap-2 fade-up fade-up-2" style="margin-bottom:28px">
+    <a href="{{ url_for('verify_sig') }}" class="btn btn-primary">Verify Another File</a>
+    <a href="{{ url_for('sign_file') }}" class="btn btn-outline">Sign a File</a>
+  </div>
+  {% endif %}
+
+  <!-- Verify form -->
+  <div class="card fade-up {% if verified is defined %}fade-up-3{% endif %}">
+    <div class="card-header">
+      <div class="card-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Verify a Signature
+      </div>
+    </div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('verify_sig') }}" enctype="multipart/form-data" id="verify-form">
+
+        <div class="grid-2" style="margin-bottom:18px">
+          <div class="form-group mb-0">
+            <label class="form-label">Original File</label>
+            <div class="drop-zone" id="file-drop">
+              <input type="file" name="file" required>
+              <span class="drop-zone-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
+              <div class="drop-zone-text">Drop original file here</div>
+            </div>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">Signature File (.sig.json)</label>
+            <div class="drop-zone" id="sig-drop">
+              <input type="file" name="sig_file" accept=".json,.sig.json">
+              <span class="drop-zone-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+              <div class="drop-zone-text">Drop .sig.json here</div>
+            </div>
+          </div>
+        </div>
+
+        <details>
+          <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--text3);margin-bottom:12px;user-select:none">
+            Or paste Public Key + Signature manually
+          </summary>
+          <div style="margin-top:12px">
+            <div class="form-group">
+              <label class="form-label">Public Key PEM</label>
+              <textarea class="form-control" name="public_key"
+                        placeholder="-----BEGIN PUBLIC KEY-----&#10;...&#10;-----END PUBLIC KEY-----" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Signature (Base64)</label>
+              <input class="form-control" type="text" name="signature_b64"
+                     placeholder="Base64-encoded signature string">
+            </div>
+          </div>
+        </details>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-full" id="verify-btn" style="margin-top:8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Verify Signature
+        </button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<script>
+document.getElementById('verify-form').addEventListener('submit', function() {
+  const btn = document.getElementById('verify-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Verifying…';
+});
+</script>
+{% endblock %}

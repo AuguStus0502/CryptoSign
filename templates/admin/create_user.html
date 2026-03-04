@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Create User{% endblock %}
+
+{% block content %}
+<div class="page-wrap-md">
+
+  <div class="page-header fade-up">
+    <div>
+      <h1 class="page-title">Create User</h1>
+      <p class="page-subtitle">Add a new account directly from the admin panel</p>
+    </div>
+    <a href="{{ url_for('admin_users') }}" class="btn btn-outline">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Users
+    </a>
+  </div>
+
+  <div class="card fade-up fade-up-1">
+    <div class="card-header">
+      <div class="card-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        New Account Details
+      </div>
+    </div>
+    <div class="card-body">
+      <form method="POST">
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-control" placeholder="e.g. alice" required autofocus>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" placeholder="alice@example.com" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" placeholder="Minimum 8 characters" required minlength="8">
+          <p class="form-hint">This account will have placeholder security answers. The user should reset their password on first login.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Role</label>
+          <select name="role" class="form-control">
+            <option value="user">Regular User</option>
+            <option value="admin">Administrator</option>
+          </select>
+          <p class="form-hint">Admin accounts have full access to the admin panel.</p>
+        </div>
+
+        <div class="alert alert-warning" style="margin-top:4px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Admin-created accounts use placeholder security answers. Share credentials securely with the user.</span>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button type="submit" class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            Create Account
+          </button>
+          <a href="{{ url_for('admin_users') }}" class="btn btn-ghost">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

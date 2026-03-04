@@ -1,0 +1,731 @@
+{% extends "base.html" %}
+{% block title %}Create Account{% endblock %}
+
+{% block head %}
+<style>
+  /* ── Register page layout ── */
+  .reg-page {
+    min-height: calc(100vh - 60px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* ── Left panel — visual side ── */
+  .reg-visual {
+    background: var(--accent);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 52px 48px;
+  }
+
+  [data-theme="dark"] .reg-visual {
+    background: #0f172a;
+    border-right: 1px solid var(--border);
+  }
+
+  .reg-visual::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 60% at 20% 80%, rgba(59,130,246,.35) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 90% 10%, rgba(6,182,212,.2) 0%, transparent 55%);
+    pointer-events: none;
+  }
+
+  .reg-visual-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: rgba(255,255,255,.95);
+    letter-spacing: -.01em;
+    position: relative;
+  }
+
+  [data-theme="dark"] .reg-visual-logo { color: var(--text); }
+
+  .reg-visual-logo svg { color: rgba(255,255,255,.8); }
+  [data-theme="dark"] .reg-visual-logo svg { color: var(--accent2); }
+
+  .reg-headline {
+    position: relative;
+  }
+
+  .reg-headline h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -.04em;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+
+  [data-theme="dark"] .reg-headline h1 { color: var(--text); }
+
+  .reg-headline p {
+    font-size: 14px;
+    color: rgba(255,255,255,.7);
+    line-height: 1.7;
+    max-width: 320px;
+  }
+
+  [data-theme="dark"] .reg-headline p { color: var(--text3); }
+
+  /* Feature list */
+  .reg-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+    margin-top: 36px;
+  }
+
+  .reg-features li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 13.5px;
+    color: rgba(255,255,255,.82);
+  }
+
+  [data-theme="dark"] .reg-features li { color: var(--text2); }
+
+  .reg-feat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255,255,255,.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 15px;
+  }
+
+  [data-theme="dark"] .reg-feat-icon {
+    background: var(--bg3);
+  }
+
+  .reg-feat-text strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 1px;
+  }
+
+  [data-theme="dark"] .reg-feat-text strong { color: var(--text); }
+
+  .reg-feat-text span {
+    font-size: 12px;
+    color: rgba(255,255,255,.6);
+  }
+
+  [data-theme="dark"] .reg-feat-text span { color: var(--text3); }
+
+  /* Step indicator decoration */
+  .reg-deco {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .reg-deco-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.3);
+  }
+
+  .reg-deco-dot.active {
+    background: #fff;
+    width: 24px;
+    border-radius: 4px;
+  }
+
+  [data-theme="dark"] .reg-deco-dot { background: var(--border2); }
+  [data-theme="dark"] .reg-deco-dot.active { background: var(--accent2); }
+
+  /* ── Right panel — form side ── */
+  .reg-form-panel {
+    background: var(--bg);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 48px 40px;
+    overflow-y: auto;
+  }
+
+  .reg-form-inner {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  /* Step progress */
+  .step-track {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 32px;
+  }
+
+  .step-item {
+    display: flex;
+    align-items: center;
+    flex: 1;
+  }
+
+  .step-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text3);
+    background: var(--surface);
+    flex-shrink: 0;
+    transition: all .25s;
+    position: relative;
+    z-index: 1;
+  }
+
+  .step-circle.active {
+    border-color: var(--accent2);
+    background: var(--accent2);
+    color: #fff;
+  }
+
+  .step-circle.done {
+    border-color: var(--accent2);
+    background: var(--accent2);
+    color: #fff;
+  }
+
+  .step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    margin: 0 4px;
+    transition: background .25s;
+  }
+
+  .step-line.done { background: var(--accent2); }
+
+  .step-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-align: center;
+    margin-top: 6px;
+    white-space: nowrap;
+  }
+
+  .step-label.active { color: var(--accent2); }
+
+  .step-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+  }
+
+  /* Step panels */
+  .step-panel {
+    display: none;
+    animation: fadeUp .28s ease both;
+  }
+
+  .step-panel.active { display: block; }
+
+  /* Section heading */
+  .step-heading {
+    margin-bottom: 22px;
+  }
+
+  .step-heading h2 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -.03em;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .step-heading p {
+    font-size: 13px;
+    color: var(--text3);
+  }
+
+  /* Security question card */
+  .sq-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    transition: border-color .2s;
+  }
+
+  .sq-card:focus-within {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+  }
+
+  .sq-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent2);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .sq-card select,
+  .sq-card input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    color: var(--text);
+    padding: 0;
+  }
+
+  .sq-card select {
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 4px center;
+    padding-right: 20px;
+  }
+
+  .sq-card input {
+    font-size: 13.5px;
+    color: var(--text2);
+  }
+
+  .sq-card input::placeholder { color: var(--text3); }
+
+  .sq-answer-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 5px;
+    display: block;
+  }
+
+  /* Nav buttons */
+  .step-nav {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  /* Errors */
+  .field-error {
+    font-size: 12px;
+    color: var(--danger);
+    margin-top: 5px;
+    display: none;
+  }
+
+  .field-error.show { display: block; }
+
+  @media (max-width: 768px) {
+    .reg-page { grid-template-columns: 1fr; }
+    .reg-visual { display: none; }
+    .reg-form-panel { padding: 32px 20px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reg-page">
+
+  <!-- ── Left visual panel ── -->
+  <div class="reg-visual">
+    <div class="reg-visual-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      CryptoSign
+    </div>
+
+    <div class="reg-headline">
+      <h1>Your digital<br>seal of trust.</h1>
+      <p>Sign files with RSA cryptography. Verify authenticity instantly. Share your public key — keep your private key locked.</p>
+
+      <ul class="reg-features">
+        <li>
+          <div class="reg-feat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg></div>
+          <div class="reg-feat-text">
+            <strong>RSA-2048 Key Generation</strong>
+            <span>PKCS#8 encrypted private key storage</span>
+          </div>
+        </li>
+        <li>
+          <div class="reg-feat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></div>
+          <div class="reg-feat-text">
+            <strong>RSA-PSS Signatures</strong>
+            <span>Sign any file — PDF, EXE, ZIP, anything</span>
+          </div>
+        </li>
+        <li>
+          <div class="reg-feat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+          <div class="reg-feat-text">
+            <strong>Tamper Detection</strong>
+            <span>SHA-256 hash verification on every check</span>
+          </div>
+        </li>
+        <li>
+          <div class="reg-feat-icon">📜</div>
+          <div class="reg-feat-text">
+            <strong>X.509 Certificates</strong>
+            <span>Self-signed certificates for authentication</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="reg-deco" id="deco-dots">
+        <div class="reg-deco-dot active" data-step="1"></div>
+        <div class="reg-deco-dot" data-step="2"></div>
+        <div class="reg-deco-dot" data-step="3"></div>
+      </div>
+      <div style="font-size:12px;color:rgba(255,255,255,.45)" id="deco-label">Step 1 of 3</div>
+    </div>
+  </div>
+
+  <!-- ── Right form panel ── -->
+  <div class="reg-form-panel">
+    <div class="reg-form-inner">
+
+      <!-- Step progress -->
+      <div class="step-track">
+        <div class="step-col">
+          <div class="step-circle active" id="sc1">1</div>
+          <div class="step-label active" id="sl1">Account</div>
+        </div>
+        <div class="step-line" id="line1"></div>
+        <div class="step-col">
+          <div class="step-circle" id="sc2">2</div>
+          <div class="step-label" id="sl2">Password</div>
+        </div>
+        <div class="step-line" id="line2"></div>
+        <div class="step-col">
+          <div class="step-circle" id="sc3">3</div>
+          <div class="step-label" id="sl3">Security</div>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+        <div class="alert alert-{{ 'danger' if cat in ['danger','error'] else cat }}" style="margin-bottom:16px">
+          {% if cat == 'danger' or cat == 'error' %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>{% else %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>{% endif %}
+          <span>{{ msg }}</span>
+        </div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('register') }}" id="reg-form" novalidate>
+
+        <!-- ══ Step 1: Account details ══ -->
+        <div class="step-panel active" id="step1">
+          <div class="step-heading">
+            <h2>Create your account</h2>
+            <p>Your username is public — choose something professional.</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="username">Username</label>
+            <input class="form-control" type="text" id="username" name="username"
+                   value="{{ request.form.get('username', '') }}"
+                   placeholder="e.g. alex_dev" autocomplete="username" minlength="3">
+            <div class="field-error" id="err-username">Username must be at least 3 characters.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">Email address</label>
+            <input class="form-control" type="email" id="email" name="email"
+                   value="{{ request.form.get('email', '') }}"
+                   placeholder="you@example.com" autocomplete="email">
+            <div class="field-error" id="err-email">Please enter a valid email address.</div>
+          </div>
+
+          <div class="step-nav">
+            <button type="button" class="btn btn-primary btn-full" onclick="goStep(2)">
+              Continue
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+
+          <div style="text-align:center;margin-top:18px;font-size:13px;color:var(--text3)">
+            Already have an account? <a href="{{ url_for('login') }}">Sign in</a>
+          </div>
+        </div>
+
+        <!-- ══ Step 2: Password ══ -->
+        <div class="step-panel" id="step2">
+          <div class="step-heading">
+            <h2>Set your password</h2>
+            <p>Use 8+ characters with a mix of letters, numbers, and symbols.</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input class="form-control" type="password" id="password" name="password"
+                   placeholder="Min. 8 characters" autocomplete="new-password" minlength="8">
+            <div class="pw-strength mt-1"><div class="pw-strength-bar"></div></div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px">
+              <span class="form-hint" id="pw-hint">Choose a strong password</span>
+              <span class="form-hint" id="pw-score-label"></span>
+            </div>
+            <div class="field-error" id="err-password">Password must be at least 8 characters.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="confirm_password">Confirm password</label>
+            <input class="form-control" type="password" id="confirm_password" name="confirm_password"
+                   placeholder="Repeat your password" autocomplete="new-password">
+            <div class="field-error" id="err-confirm">Passwords do not match.</div>
+          </div>
+
+          <div class="step-nav">
+            <button type="button" class="btn btn-outline" onclick="goStep(1)" style="width:80px">Back</button>
+            <button type="button" class="btn btn-primary" style="flex:1" onclick="goStep(3)">
+              Continue
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ══ Step 3: Security questions ══ -->
+        <div class="step-panel" id="step3">
+          <div class="step-heading">
+            <h2>Security questions</h2>
+            <p>Used to recover your account. Pick questions only you know — answers are case-insensitive.</p>
+          </div>
+
+          <!-- Question 1 -->
+          <div class="sq-card">
+            <div class="sq-number">1</div>
+            <select name="sec_q1" id="sec_q1" required>
+              {% for q in questions %}
+              <option value="{{ q }}" {% if request.form.get('sec_q1') == q %}selected{% endif %}>{{ q }}</option>
+              {% endfor %}
+            </select>
+            <span class="sq-answer-label">Your Answer</span>
+            <input type="text" name="sec_a1" id="sec_a1"
+                   placeholder="Type your answer here…"
+                   value="{{ request.form.get('sec_a1', '') }}" autocomplete="off">
+          </div>
+
+          <!-- Question 2 -->
+          <div class="sq-card">
+            <div class="sq-number">2</div>
+            <select name="sec_q2" id="sec_q2" required>
+              {% for q in questions %}
+              <option value="{{ q }}" {% if request.form.get('sec_q2') == q %}selected{% endif %}>{{ q }}</option>
+              {% endfor %}
+            </select>
+            <span class="sq-answer-label">Your Answer</span>
+            <input type="text" name="sec_a2" id="sec_a2"
+                   placeholder="Type your answer here…"
+                   value="{{ request.form.get('sec_a2', '') }}" autocomplete="off">
+          </div>
+
+          <!-- Question 3 -->
+          <div class="sq-card">
+            <div class="sq-number">3</div>
+            <select name="sec_q3" id="sec_q3" required>
+              {% for q in questions %}
+              <option value="{{ q }}" {% if request.form.get('sec_q3') == q %}selected{% endif %}>{{ q }}</option>
+              {% endfor %}
+            </select>
+            <span class="sq-answer-label">Your Answer</span>
+            <input type="text" name="sec_a3" id="sec_a3"
+                   placeholder="Type your answer here…"
+                   value="{{ request.form.get('sec_a3', '') }}" autocomplete="off">
+          </div>
+
+          <div class="field-error show" id="err-security" style="display:none"></div>
+
+          <div class="step-nav">
+            <button type="button" class="btn btn-outline" onclick="goStep(2)" style="width:80px">Back</button>
+            <button type="submit" class="btn btn-primary" style="flex:1" id="submit-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Create Account
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentStep = 1;
+
+// If there were server errors, jump to step 3 (security questions)
+{% if request.method == 'POST' %}
+currentStep = 3;
+showStep(3);
+{% endif %}
+
+function showStep(n) {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+
+  // Update circles
+  for (let i = 1; i <= 3; i++) {
+    const sc = document.getElementById('sc' + i);
+    const sl = document.getElementById('sl' + i);
+    sc.classList.remove('active', 'done');
+    sl.classList.remove('active');
+    if (i < n) { sc.classList.add('done'); sc.innerHTML = '✓'; }
+    else if (i === n) { sc.classList.add('active'); sc.textContent = i; sl.classList.add('active'); }
+    else { sc.textContent = i; }
+  }
+
+  // Update lines
+  for (let i = 1; i <= 2; i++) {
+    document.getElementById('line' + i).classList.toggle('done', i < n);
+  }
+
+  // Update left panel deco dots
+  document.querySelectorAll('.reg-deco-dot').forEach((d, idx) => {
+    d.classList.toggle('active', idx + 1 === n);
+    d.style.width = idx + 1 === n ? '24px' : '8px';
+    d.style.borderRadius = idx + 1 === n ? '4px' : '50%';
+  });
+  const decoLabel = document.getElementById('deco-label');
+  if (decoLabel) decoLabel.textContent = 'Step ' + n + ' of 3';
+
+  currentStep = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goStep(n) {
+  // Validate before advancing
+  if (n > currentStep) {
+    if (currentStep === 1 && !validateStep1()) return;
+    if (currentStep === 2 && !validateStep2()) return;
+  }
+  showStep(n);
+}
+
+function validateStep1() {
+  let ok = true;
+  const u = document.getElementById('username');
+  const e = document.getElementById('email');
+  const eu = document.getElementById('err-username');
+  const ee = document.getElementById('err-email');
+
+  if (!u.value.trim() || u.value.trim().length < 3) {
+    eu.classList.add('show'); u.style.borderColor = 'var(--danger)'; ok = false;
+  } else { eu.classList.remove('show'); u.style.borderColor = ''; }
+
+  if (!e.value.includes('@') || !e.value.includes('.')) {
+    ee.classList.add('show'); e.style.borderColor = 'var(--danger)'; ok = false;
+  } else { ee.classList.remove('show'); e.style.borderColor = ''; }
+
+  return ok;
+}
+
+function validateStep2() {
+  let ok = true;
+  const p = document.getElementById('password');
+  const c = document.getElementById('confirm_password');
+  const ep = document.getElementById('err-password');
+  const ec = document.getElementById('err-confirm');
+
+  if (!p.value || p.value.length < 8) {
+    ep.classList.add('show'); p.style.borderColor = 'var(--danger)'; ok = false;
+  } else { ep.classList.remove('show'); p.style.borderColor = ''; }
+
+  if (p.value !== c.value || !c.value) {
+    ec.classList.add('show'); c.style.borderColor = 'var(--danger)'; ok = false;
+  } else { ec.classList.remove('show'); c.style.borderColor = ''; }
+
+  return ok;
+}
+
+// Live password strength
+const pwInput = document.getElementById('password');
+const pwBar = document.querySelector('.pw-strength-bar');
+const pwScoreLabel = document.getElementById('pw-score-label');
+if (pwInput) {
+  pwInput.addEventListener('input', () => {
+    const v = pwInput.value;
+    let score = 0;
+    if (v.length >= 8) score++;
+    if (v.length >= 12) score++;
+    if (/[A-Z]/.test(v)) score++;
+    if (/[0-9]/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    const pct = (score / 5) * 100;
+    const labels = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Very strong'];
+    const colors = ['', '#EF4444', '#F59E0B', '#3B82F6', '#2563EB', '#1D4ED8'];
+    pwBar.style.width = pct + '%';
+    pwBar.style.background = colors[score] || '#E5E7EB';
+    pwScoreLabel.textContent = labels[score] || '';
+    pwScoreLabel.style.color = colors[score] || 'var(--text3)';
+  });
+}
+
+// Submit button loading state
+document.getElementById('reg-form').addEventListener('submit', function(e) {
+  // Final validation
+  const a1 = document.getElementById('sec_a1').value.trim();
+  const a2 = document.getElementById('sec_a2').value.trim();
+  const a3 = document.getElementById('sec_a3').value.trim();
+  const q1 = document.getElementById('sec_q1').value;
+  const q2 = document.getElementById('sec_q2').value;
+  const q3 = document.getElementById('sec_q3').value;
+  const errEl = document.getElementById('err-security');
+
+  if (!a1 || !a2 || !a3) {
+    e.preventDefault();
+    errEl.textContent = 'Please answer all three security questions.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (q1 === q2 || q1 === q3 || q2 === q3) {
+    e.preventDefault();
+    errEl.textContent = 'Please choose three different security questions.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  errEl.style.display = 'none';
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Creating account…';
+});
+</script>
+{% endblock %}

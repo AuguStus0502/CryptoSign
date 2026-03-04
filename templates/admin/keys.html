@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Key Registry{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+  <div class="page-header fade-up">
+    <div>
+      <h1 class="page-title">Key Registry</h1>
+      <p class="page-subtitle">{{ keys | length }} key pair{{ 's' if keys | length != 1 else '' }} across all users</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <span class="badge badge-green" style="font-size:12px;padding:4px 12px">
+        {{ keys | selectattr('is_revoked', 'equalto', false) | list | length }} Active
+      </span>
+      <span class="badge badge-red" style="font-size:12px;padding:4px 12px">
+        {{ keys | selectattr('is_revoked', 'equalto', true) | list | length }} Revoked
+      </span>
+    </div>
+  </div>
+
+  <div class="card fade-up fade-up-1">
+    <div class="table-wrap" style="border:none;border-radius:0">
+      <table>
+        <thead>
+          <tr>
+            <th>Key Name</th>
+            <th>Owner</th>
+            <th>Fingerprint</th>
+            <th>Size</th>
+            <th>Status</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for key in keys %}
+          <tr {% if key.is_revoked %}style="opacity:.6"{% endif %}>
+            <td>
+              <div style="display:flex;align-items:center;gap:9px">
+                <div style="width:30px;height:30px;border-radius:8px;background:{% if key.is_revoked %}var(--bg3){% else %}rgba(var(--success-rgb),.1){% endif %};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{% if key.is_revoked %}var(--text3){% else %}var(--success){% endif %}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>
+                </div>
+                <span style="font-weight:600;color:var(--text)">{{ key.key_name }}</span>
+              </div>
+            </td>
+            <td>
+              <span style="font-weight:500;color:var(--text2)">{{ key.owner.username }}</span>
+            </td>
+            <td>
+              <span class="fingerprint" style="font-size:11px">{{ key.fingerprint[:24] }}…</span>
+            </td>
+            <td>
+              <span class="badge badge-blue">{{ key.key_size }}-bit</span>
+            </td>
+            <td>
+              {% if key.is_revoked %}
+                <span style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--danger);font-weight:600">
+                  <span class="dot dot-red"></span> Revoked
+                </span>
+              {% else %}
+                <span style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--success);font-weight:600">
+                  <span class="dot dot-green"></span> Active
+                </span>
+              {% endif %}
+            </td>
+            <td style="font-size:12.5px;color:var(--text3);white-space:nowrap">
+              {{ key.created_at.strftime('%d %b %Y') }}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <span class="empty-state-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>
+                </span>
+                <p class="empty-state-text">No keys generated yet</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

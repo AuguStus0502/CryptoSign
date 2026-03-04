@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Verify Identity{% endblock %}
+
+{% block content %}
+<div class="page-wrap-sm">
+  <div class="auth-card fade-up">
+
+    <div class="auth-logo">
+      <img src="{{ url_for('static', filename='logo-light.png') }}" class="brand-logo brand-logo-light" alt="CryptoSign" height="52">
+      <img src="{{ url_for('static', filename='logo-dark.png') }}" class="brand-logo brand-logo-dark" alt="CryptoSign" height="52">
+    </div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:1.125rem;font-weight:700;color:var(--text);letter-spacing:-0.01em;">CryptoSign</div>
+    </div>
+
+    <div class="auth-title">Verify your identity</div>
+    <div class="auth-subtitle">Answer your security questions to recover your account.</div>
+
+    <form method="POST" action="{{ url_for('security_questions') }}">
+      <input type="hidden" name="username" value="{{ username }}">
+
+      <div class="sq-block">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Question 1</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">{{ q1 }}</div>
+          <input class="form-control" type="text" name="sec_a1" placeholder="Your answer" required autofocus autocomplete="off">
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Question 2</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">{{ q2 }}</div>
+          <input class="form-control" type="text" name="sec_a2" placeholder="Your answer" required autocomplete="off">
+        </div>
+
+        {% if q3 %}
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Question 3</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">{{ q3 }}</div>
+          <input class="form-control" type="text" name="sec_a3" placeholder="Your answer" required autocomplete="off">
+        </div>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Verify & Continue
+      </button>
+    </form>
+
+    <div style="text-align:center;margin-top:20px;font-size:13.5px;color:var(--text3)">
+      <a href="{{ url_for('login') }}">← Back to login</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
