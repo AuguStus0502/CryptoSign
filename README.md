@@ -200,6 +200,7 @@ from crypto_utils import generate_rsa_keypair, sign_file_data, encrypt_file
 - Uses self-signed certificates. For production deployments, certificates should be issued by a trusted Certificate Authority.
 - Change default admin credentials before deploying to any shared environment.
 - `keystores/` and `instance/` are excluded from version control — back these up separately.
+- The tool requires no external services or internet connectivity, making it suitable for air-gapped environments.
 
 ---
 
