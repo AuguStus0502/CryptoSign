@@ -1,11 +1,25 @@
-# CryptoSign
+# 🔐 Secure Code Signing
 
-A web-based **Public Key Infrastructure (PKI) tool** for digital file signing, signature verification, hybrid encryption, and certificate management. Built with Python/Flask and the `cryptography` library.
+> A web-based **Public Key Infrastructure (PKI)** tool for digital file signing, signature verification, hybrid encryption, and certificate management — built from scratch with Python and Flask.
 
-> **ST6051CEM — Practical Cryptography | Softwarica College / Coventry University**
-> **Author:** Avinabh
-> **GitHub:** [https://github.com/AuguStus0502/CryptoSign](https://github.com/AuguStus0502/CryptoSign)
-> **Video Demo:** *(coming soon — link will be added before submission)*
+---
+
+**Author:** Avinabh Jung Shrestha
+**Course:** ST6051CEM — Practical Cryptography
+**Institution:** Softwarica College of IT & E-Commerce | In collaboration with Coventry University
+**GitHub:** [https://github.com/AuguStus0502/Secure-Code-Signing](https://github.com/AuguStus0502/Secure-Code-Signing)
+
+
+---
+
+## What Is This?
+
+Secure Code Signing is an open-source cryptographic tool that solves two core real-world problems:
+
+1. **Proving authenticity** — Digitally sign any file (PDF, Word, ZIP, anything) so the recipient can verify it came from you and was not tampered with.
+2. **Ensuring confidentiality** — Encrypt messages so only the intended recipient can decrypt them using their private key.
+
+Think of it as a mini version of the cryptographic systems used by banks, law firms, and software companies — but open-source and running in your browser.
 
 ---
 
@@ -13,17 +27,17 @@ A web-based **Public Key Infrastructure (PKI) tool** for digital file signing, s
 
 | Feature | Description |
 |---|---|
-| **RSA Key Generation** | 2048 / 3072 / 4096-bit key pairs with password-protected PKCS#8 storage |
-| **PKCS#12 Export** | Export keys + certificates as `.p12` bundles for use with OS keystores / HSMs |
-| **Digital Signatures** | RSA-PSS (SHA-256) — sign any file, download a portable `.sig.json` |
-| **Signature Verification** | Verify any file against its `.sig.json` without an account |
-| **Hybrid Encryption** | AES-256-GCM + RSA-OAEP — encrypt messages and files of any size |
-| **X.509 Certificates** | Self-signed certificates auto-generated for every key pair |
-| **Certificate Pinning** | SHA-256 fingerprint pinning helper to prevent MITM attacks |
-| **Replay-Attack Prevention** | Signed envelopes with nonce + timestamp validation |
-| **Forward Secrecy** | Ephemeral ECDH (P-256) + HKDF-SHA256 session key derivation |
-| **Audit Logging** | Every action recorded with user, IP, and timestamp |
-| **Admin Panel** | User management, key overview, full audit log |
+| 🔑 **RSA Key Generation** | 2048 / 3072 / 4096-bit key pairs with password-protected PKCS#8 storage |
+| 📦 **PKCS#12 Export** | Export keys + certificates as `.p12` bundles for OS keystores / HSMs |
+| ✍️ **Digital Signatures** | RSA-PSS (SHA-256) — sign any file, download a portable `.sig.json` |
+| ✅ **Signature Verification** | Verify any file against its `.sig.json` — no account needed |
+| 🔒 **Hybrid Encryption** | AES-256-GCM + RSA-OAEP — encrypt messages and files of any size |
+| 📜 **X.509 Certificates** | Self-signed certificates auto-generated for every key pair |
+| 📌 **Certificate Pinning** | SHA-256 fingerprint pinning to prevent MITM attacks |
+| 🛡️ **Replay-Attack Prevention** | Signed envelopes with nonce + timestamp validation |
+| ⏩ **Forward Secrecy** | Ephemeral ECDH (P-256) + HKDF-SHA256 session key derivation |
+| 📋 **Audit Logging** | Every action recorded with user, IP, and timestamp |
+| 👤 **Admin Panel** | User management, key overview, password reset, full audit log |
 
 ---
 
@@ -38,8 +52,8 @@ A web-based **Public Key Infrastructure (PKI) tool** for digital file signing, s
 
 ```bash
 
-git clone https://github.com/AuguStus0502/CryptoSign.git
-cd cryptosign
+git clone https://github.com/AuguStus0502/Secure-Code-Signing.git
+cd Secure-Code-Signing
 
 
 python -m venv venv
@@ -58,7 +72,7 @@ A default admin account is created automatically on first run:
 - **Username:** `admin`
 - **Password:** `admin6217`
 
-> Change the default admin password immediately in production.
+> ⚠️ Change the default admin password immediately in production.
 
 ---
 
@@ -66,42 +80,47 @@ A default admin account is created automatically on first run:
 
 ### Regular Users
 
-1. **Register** at `/register` — provide username, email, password, and three security questions.
-2. **Generate a Key Pair** at `/keys` — choose key name, size (2048/3072/4096-bit), and key password. A self-signed X.509 certificate is generated automatically.
-3. **Sign a File** at `/sign` — upload any file, select a key, enter key password. Download the `.sig.json` signature bundle.
-4. **Verify a File** at `/verify` — upload the original file + `.sig.json` to verify the signature.
+1. **Register** at `/register` — provide username, email, password, and three security questions for account recovery.
+2. **Generate a Key Pair** at `/keys` — choose key name, size (2048/3072/4096-bit), and key password. A self-signed X.509 certificate is auto-generated.
+3. **Sign a File** at `/sign` — upload any file (up to 500 MB), select a key, enter key password. Download the `.sig.json` signature bundle.
+4. **Verify a File** at `/verify` — upload the original file + `.sig.json` to confirm authenticity and detect tampering.
 5. **Encrypt / Decrypt** at `/encrypt` — hybrid-encrypt messages to any user's public key; decrypt with your private key password.
-6. **Export PKCS#12** at `/keys` — download key + certificate as a `.p12` for use in browsers or OS keystores.
-7. **View History** at `/history` — see all files you have signed.
+6. **Export PKCS#12** at `/keys` — download key + certificate as a `.p12` file for use in browsers or OS keystores.
+7. **View History** at `/history` — see a full log of all files you have signed.
 
 ### Admin
 
-Log in at `/admin/login`. From the admin panel you can create/manage users, view all key pairs, and browse the full audit log.
+Log in at `/admin/login`. The admin panel lets you:
+- Create, activate, deactivate, block, or delete user accounts
+- Reset any user's password (forces them to change it on next login)
+- Promote users to admin role
+- View all RSA key pairs across the platform
+- Browse the full paginated audit log
 
 ---
 
 ## Cryptographic Design
 
 ### Key Storage
-Private keys are stored encrypted with **PKCS#8 + BestAvailableEncryption** (AES-256-CBC, scrypt KDF). Keys never leave the server unencrypted.
+Private keys are encrypted with **PKCS#8 + BestAvailableEncryption** (AES-256-CBC, scrypt KDF) before being written to disk. Keys never leave the server unencrypted.
 
 ### Digital Signatures
-Files are signed with **RSA-PSS** (SHA-256, maximum salt length). PSS provides stronger security guarantees than the legacy PKCS#1 v1.5 scheme.
+Files are signed with **RSA-PSS** (SHA-256, maximum salt length). PSS is more secure than the legacy PKCS#1 v1.5 scheme as it uses probabilistic padding, resisting chosen-ciphertext attacks.
 
 ### Hybrid Encryption
-Pure RSA is limited to ~190 bytes (2048-bit). CryptoSign uses hybrid encryption for all data:
+Pure RSA encryption is limited to ~190 bytes (2048-bit key). Secure Code Signing uses hybrid encryption for all data:
 1. Generate a random 256-bit AES session key
-2. Encrypt data with **AES-256-GCM** (authenticated encryption)
+2. Encrypt data with **AES-256-GCM** (provides both confidentiality and integrity)
 3. Encrypt the session key with **RSA-OAEP** (SHA-256)
 
 ### Replay-Attack Prevention
-Signed envelopes embed a **128-bit random nonce** and **UTC timestamp**. Verification rejects any envelope whose nonce has been seen before, or whose timestamp exceeds the freshness window.
+Every signed envelope embeds a **128-bit random nonce** and a **UTC timestamp**. The verifier rejects any envelope whose nonce has been used before, or whose timestamp falls outside the allowed freshness window — preventing attackers from reusing captured messages.
 
 ### Forward Secrecy
-Session keys are derived from **ephemeral ECDH** (P-256) exchanges using **HKDF-SHA256**. Discarding ephemeral keys after use ensures past sessions cannot be decrypted even if the long-term key is later compromised.
+Session keys are derived from **ephemeral ECDH** (P-256) exchanges using **HKDF-SHA256**. Ephemeral keys are discarded after each session, meaning past communications cannot be decrypted even if the long-term private key is later compromised.
 
 ### MITM Prevention
-Each certificate's **SHA-256 fingerprint** can be pinned. Any certificate substitution by an attacker produces a different fingerprint and is rejected.
+Each certificate's **SHA-256 fingerprint** can be pinned by clients. Any certificate substituted by a man-in-the-middle attacker produces a different fingerprint and is rejected immediately.
 
 ---
 
@@ -116,32 +135,41 @@ pytest tests/ -v
 python -m unittest discover tests/ -v
 ```
 
-The test suite covers **39 test cases** across 8 categories including simulated attacks (replay, MITM, forged signatures, tampered ciphertext, key impersonation).
+The test suite covers **39 test cases** across 8 categories:
+
+- Key generation and serialisation
+- PKCS#12 export and import
+- Digital signatures
+- Hybrid encryption (messages and files)
+- X.509 certificates and fingerprint pinning
+- Replay-attack prevention (nonce reuse, expired envelopes, tampered payloads)
+- Forward secrecy (ECDH key exchange)
+- Multi-user signing and attack simulations (forged signatures, MITM, key impersonation)
 
 ---
 
 ## Project Structure
 
 ```
-cryptosign/
+Secure-Code-Signing/
 ├── app.py                     
 ├── crypto_utils.py            
-├── requirements.txt
+├── requirements.txt           
 ├── README.md
-├── LICENSE
 ├── tests/
+│   ├── __init__.py
 │   └── test_crypto_utils.py   
 ├── templates/
-│   ├── admin/
-│   └── *.html
-├── static/
+│   ├── admin/                 
+│   └── *.html                 
+├── static/                    
 ├── keystores/                 
 └── instance/                  
 ```
 
 ---
 
-## Extending CryptoSign
+## Extending This Tool
 
 All cryptographic operations are isolated in `crypto_utils.py`. To add a new algorithm:
 
@@ -157,11 +185,21 @@ from crypto_utils import generate_rsa_keypair, sign_file_data, encrypt_file
 
 ---
 
+## Real-World Use Cases
+
+**1. Legal Document Signing** — A lawyer signs a contract PDF before sending it to a client. The client verifies the signature to confirm it came from the lawyer and was not altered in transit.
+
+**2. Secure Internal Communications** — A company encrypts sensitive memos to specific recipients. Even if the message is intercepted, it cannot be read without the recipient's private key.
+
+**3. Software Release Verification** — A developer signs each software release archive. Users verify the signature before installing to prevent supply chain attacks.
+
+---
+
 ## Security Notes
 
-- Uses self-signed certificates. For production, certificates should be issued by a trusted CA.
-- Change default admin credentials before deployment.
-- `keystores/` and `instance/` are excluded from version control — back them up separately.
+- Uses self-signed certificates. For production deployments, certificates should be issued by a trusted Certificate Authority.
+- Change default admin credentials before deploying to any shared environment.
+- `keystores/` and `instance/` are excluded from version control — back these up separately.
 
 ---
 
