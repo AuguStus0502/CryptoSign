@@ -1,4 +1,4 @@
-# 🔐 Secure Code Signing
+# Secure Code Signing
 
 > A web-based **Public Key Infrastructure (PKI)** tool for digital file signing, signature verification, hybrid encryption, and certificate management — built from scratch with Python and Flask.
 
@@ -27,17 +27,17 @@ Think of it as a mini version of the cryptographic systems used by banks, law fi
 
 | Feature | Description |
 |---|---|
-| 🔑 **RSA Key Generation** | 2048 / 3072 / 4096-bit key pairs with password-protected PKCS#8 storage |
-| 📦 **PKCS#12 Export** | Export keys + certificates as `.p12` bundles for OS keystores / HSMs |
-| ✍️ **Digital Signatures** | RSA-PSS (SHA-256) — sign any file, download a portable `.sig.json` |
-| ✅ **Signature Verification** | Verify any file against its `.sig.json` — no account needed |
-| 🔒 **Hybrid Encryption** | AES-256-GCM + RSA-OAEP — encrypt messages and files of any size |
-| 📜 **X.509 Certificates** | Self-signed certificates auto-generated for every key pair |
-| 📌 **Certificate Pinning** | SHA-256 fingerprint pinning to prevent MITM attacks |
-| 🛡️ **Replay-Attack Prevention** | Signed envelopes with nonce + timestamp validation |
-| ⏩ **Forward Secrecy** | Ephemeral ECDH (P-256) + HKDF-SHA256 session key derivation |
-| 📋 **Audit Logging** | Every action recorded with user, IP, and timestamp |
-| 👤 **Admin Panel** | User management, key overview, password reset, full audit log |
+| **RSA Key Generation** | 2048 / 3072 / 4096-bit key pairs with password-protected PKCS#8 storage |
+| **PKCS#12 Export** | Export keys + certificates as `.p12` bundles for OS keystores / HSMs |
+| **Digital Signatures** | RSA-PSS (SHA-256) — sign any file, download a portable `.sig.json` |
+| **Signature Verification** | Verify any file against its `.sig.json` — no account needed |
+| **Hybrid Encryption** | AES-256-GCM + RSA-OAEP — encrypt messages and files of any size |
+| **X.509 Certificates** | Self-signed certificates auto-generated for every key pair |
+| **Certificate Pinning** | SHA-256 fingerprint pinning to prevent MITM attacks |
+| **Replay-Attack Prevention** | Signed envelopes with nonce + timestamp validation |
+| **Forward Secrecy** | Ephemeral ECDH (P-256) + HKDF-SHA256 session key derivation |
+| **Audit Logging** | Every action recorded with user, IP, and timestamp |
+| **Admin Panel** | User management, key overview, password reset, full audit log |
 
 ---
 
@@ -51,18 +51,14 @@ Think of it as a mini version of the cryptographic systems used by banks, law fi
 ### Installation
 
 ```bash
-# 1. Clone the repository
 git clone https://github.com/AuguStus0502/Secure-Code-Signing.git
 cd Secure-Code-Signing
 
-# 2. Create and activate a virtual environment (recommended)
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 
-# 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Run the application
 python app.py
 ```
 
@@ -72,7 +68,7 @@ A default admin account is created automatically on first run:
 - **Username:** `admin`
 - **Password:** `admin6217`
 
-> ⚠️ Change the default admin password immediately in production.
+> Change the default admin password immediately in production.
 
 ---
 
@@ -127,11 +123,9 @@ Each certificate's **SHA-256 fingerprint** can be pinned by clients. Any certifi
 ## Running Tests
 
 ```bash
-# Using pytest (recommended)
 pip install pytest
 pytest tests/ -v
 
-# Using built-in unittest (no extra dependencies)
 python -m unittest discover tests/ -v
 ```
 
@@ -152,19 +146,19 @@ The test suite covers **39 test cases** across 8 categories:
 
 ```
 Secure-Code-Signing/
-├── app.py                     # Flask application, routes, models
-├── crypto_utils.py            # All cryptographic primitives
-├── requirements.txt           # Python dependencies
+├── app.py                     
+├── crypto_utils.py            
+├── requirements.txt           
 ├── README.md
 ├── tests/
 │   ├── __init__.py
-│   └── test_crypto_utils.py   # 39 unit + attack simulation tests
+│   └── test_crypto_utils.py   
 ├── templates/
-│   ├── admin/                 # Admin panel templates
-│   └── *.html                 # User-facing templates
-├── static/                    # CSS, JS, images
-├── keystores/                 # Encrypted private keys (gitignored)
-└── instance/                  # SQLite database (gitignored)
+│   ├── admin/                 
+│   └── *.html                 
+├── static/                    
+├── keystores/                 
+└── instance/                  
 ```
 
 ---
