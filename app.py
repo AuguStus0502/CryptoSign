@@ -44,8 +44,9 @@ class User(UserMixin, db.Model):
     role          = db.Column(db.String(20),  default='user')   
     _is_active    = db.Column('is_active', db.Boolean, default=True)
     
-    blocked_until = db.Column(db.DateTime, nullable=True)
-    created_at    = db.Column(db.DateTime, default=datetime.utcnow)
+    blocked_until        = db.Column(db.DateTime, nullable=True)
+    created_at           = db.Column(db.DateTime, default=datetime.utcnow)
+    must_change_password = db.Column(db.Boolean, default=False)
     
     sec_q1        = db.Column(db.String(200), nullable=False)
     sec_a1_hash   = db.Column(db.String(256), nullable=False)
@@ -323,6 +324,32 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
+@app.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+        current_pw  = request.form.get('current_password', '')
+        new_pw      = request.form.get('new_password', '')
+        confirm_pw  = request.form.get('confirm_password', '')
+
+        if not current_user.check_password(current_pw):
+            flash('Current password is incorrect.', 'danger')
+        elif len(new_pw) < 8:
+            flash('New password must be at least 8 characters.', 'danger')
+        elif new_pw != confirm_pw:
+            flash('New passwords do not match.', 'danger')
+        elif new_pw == 'password':
+            flash('Please choose a stronger password.', 'danger')
+        else:
+            current_user.set_password(new_pw)
+            current_user.must_change_password = False
+            db.session.commit()
+            log_action('PASSWORD_CHANGE', 'User changed their password')
+            flash('Password changed successfully!', 'success')
+            return redirect(url_for('dashboard'))
+
+    return render_template('change_password.html')
+
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
@@ -409,6 +436,10 @@ def dashboard():
     # Admins go to admin panel unless they toggled user view
     if current_user.is_admin and not session.get('admin_user_view'):
         return redirect(url_for('admin_index'))
+    # Force password change if admin reset it
+    if current_user.must_change_password:
+        flash('Your password has been reset by an administrator. Please set a new password.', 'warning')
+        return redirect(url_for('change_password'))
     total_keys  = KeyPair.query.filter_by(user_id=current_user.id).count()
     active_keys = KeyPair.query.filter_by(user_id=current_user.id, is_revoked=False).count()
     total_sigs  = SignedFile.query.filter_by(user_id=current_user.id).count()
@@ -825,6 +856,22 @@ def unblock_user(user_id):
     db.session.commit()
     log_action('ADMIN_USER_UNBLOCK', f'Unblocked {user.username}')
     flash(f'{user.username} has been unblocked.', 'success')
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/users/<int:user_id>/reset-password', methods=['POST'])
+@login_required
+@admin_required
+def admin_reset_password(user_id):
+    """Reset a user's password to 'password'."""
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash("You cannot reset your own password this way.", 'danger')
+        return redirect(url_for('admin_users'))
+    user.set_password('password')
+    user.must_change_password = True
+    db.session.commit()
+    log_action('ADMIN_RESET_PASSWORD', f'Reset password for user: {user.username}')
+    flash(f'Password for {user.username} has been reset to "password".', 'success')
     return redirect(url_for('admin_users'))
 
 @app.route('/admin/users/<int:user_id>/delete', methods=['POST'])
